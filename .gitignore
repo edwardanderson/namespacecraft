@@ -1,0 +1,33 @@
+# Python binaries.
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info
+build/
+dist/
+
+# Python virtual environments.
+.venv/
+v/
+
+# IDEs
+.idea/
+.vscode/
+
+# Log files.
+*.log
+
+# Application-specific ignores.
+state.json
+
+# Local config
+.env
+
+# Ignore mac files.
+.DS_Store
+
+# Local dev environment.
+.dev/
+
+# Pytest
+.coverage
