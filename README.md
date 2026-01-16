@@ -2,7 +2,7 @@
 
 Namespacecraft is a tiny toolkit for composing URI namespaces.
 
-```python
+```pycon
 >>> from namespacecraft import Namespace
 
 >>> Namespace('http://example.org/')
