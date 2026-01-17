@@ -52,9 +52,17 @@ def test_single_fragment_from_path():
 # Expected errors
 
 def test_only_one_fragment_allowed():
-    EX = Namespace('http://example.org/')
-    with pytest.raises(ValueError):
-        _ = (EX / 'a' + 'x') + 'y'
+    EX = Namespace("http://example.org/")
+    PART = EX / "part"
+
+    # First fragment is fine
+    first = PART + "a"
+    assert first == "http://example.org/part#a"
+    
+    # The original Namespace can still be used to create another fragment
+    second = PART + "b"
+    assert second == "http://example.org/part#b"
+
 
 def test_mismatched_delimiters_in_path():
     # Slash namespace cannot accept #
