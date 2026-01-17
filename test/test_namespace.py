@@ -42,6 +42,9 @@ def test_attribute():
     EX = Namespace('http://example.org/')
     assert EX.a == 'http://example.org/a'
 
+    EX = Namespace('http://example.org#')
+    assert EX.a == 'http://example.org#a'
+
 def test_single_fragment_from_path():
     EX = Namespace('http://example.org#') / 'a'
     assert str(EX) == 'http://example.org#a'
