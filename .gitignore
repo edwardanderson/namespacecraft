@@ -31,3 +31,6 @@ state.json
 
 # Pytest
 .coverage
+
+# Local
+dev/
