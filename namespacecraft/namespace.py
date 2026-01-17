@@ -22,7 +22,7 @@ class Namespace:
         self._term_class = term_class
 
     # Path-building operator
-    def __truediv__(self, other: str | int | list | tuple]) -> Namespace:
+    def __truediv__(self, other: str | int | list | tuple) -> Namespace:
         if isinstance(other, (list, tuple)):
             ns = self
             for part in other:
@@ -74,6 +74,6 @@ class Namespace:
         return f'Namespace({str(self)!r})'
 
     # Membership test
-    def __contains__(self, other: Union[str, Namespace]) -> bool:
+    def __contains__(self, other: str | Namespace) -> bool:
         other_str = str(other)
         return other_str.startswith(self._base)
