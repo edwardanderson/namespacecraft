@@ -38,19 +38,19 @@ class Namespace:
         other = str(other)
 
         if self._fragment is not None:
-            raise ValueError("Cannot extend a namespace that already has a fragment")
+            raise ValueError('Cannot extend a namespace that already has a fragment')
 
         # Mismatched delimiter check
-        if self._hash and "/" in other:
-            raise ValueError("Cannot append hierarchical path to a hash namespace")
-        if not self._hash and "#" in other:
-            raise ValueError("Cannot append fragment-like string to a slash namespace")
+        if self._hash and '/' in other:
+            raise ValueError('Cannot append hierarchical path to a hash namespace')
+        if not self._hash and '#' in other:
+            raise ValueError('Cannot append fragment-like string to a slash namespace')
 
         # Slash namespace logic
         if self._hash:
             return Namespace(self._base, other, term_class=self._term_class)
 
-        new_base = self._base.rstrip("/") + "/" + other.lstrip("/")
+        new_base = self._base.rstrip('/') + '/' + other.lstrip('/')
         return Namespace(new_base, term_class=self._term_class)
 
 
@@ -89,31 +89,3 @@ class Namespace:
         other_str = str(other)
         base_no_fragment = self._base
         return other_str.startswith(base_no_fragment)
-
-    def to_rdflib(self):
-        """
-        Convert this Namespacecraft.Namespace to an rdflib.Namespace.
-
-        Returns:
-            rdflib.Namespace: an RDFLib-compatible namespace object.
-
-        Raises:
-            ImportError: if rdflib is not installed.
-        """
-        try:
-            from rdflib import Namespace as RDFLibNamespace
-        except ImportError as e:
-            raise ImportError(
-                "rdflib is required to use .to_rdflib(). Install it with "
-                "`pip install rdflib`."
-            ) from e
-
-        # Construct the base string for RDFLib
-        base_uri = str(self)
-
-        # If this Namespace has a fragment, remove it for RDFLib.Namespace
-        # RDFLib Namespace objects expect the base URI only
-        if self._fragment is not None:
-            base_uri = self._base
-
-        return RDFLibNamespace(base_uri)
