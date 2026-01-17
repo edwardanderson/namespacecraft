@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Type, Union
+from typing import Type
 
 
 class Namespace:
@@ -22,7 +22,7 @@ class Namespace:
         self._term_class = term_class
 
     # Path-building operator
-    def __truediv__(self, other: Union[str, int, list, tuple]) -> Namespace:
+    def __truediv__(self, other: str | int | list | tuple]) -> Namespace:
         if isinstance(other, (list, tuple)):
             ns = self
             for part in other:
