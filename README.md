@@ -4,18 +4,21 @@ Namespacecraft is a tiny toolkit for composing URI namespaces.
 
 ```pycon
 >>> from namespacecraft import Namespace
->>> EX = Namespace('http://example.org/') / 'a' / 'b' / 'c'
+>>> Namespace('http://example.org/') / 'a' / 'b' / 'c'
+>>> EX
+Namespace('http://example.org/a/b/c')
 >>> str(EX)
 'http://example.org/a/b/c
->>> EX = Namespace('http://example.org') / [1, 2, 3]
->>> str(EX)
+>>> Namespace('http://example.org') / [1, 2, 3]
 'http://example.org/1/2/3/'
->>> EX = Namespace('http://example.org/') / 'x' + 'y'
->>> str(EX)
+>>> Namespace('http://example.org/') / 'x' + 'y'
 'http://example.org/x#y'
 >>> EX = Namespace('http://example.org/)
 >>> EX.a
 'http://example.org/a'
+>>> EX = Namespace('http://example.org#)
+>>> EX.b
+'http://example.org#b'
 ```
 
 `Namespace` can be configured to create terms in any class that initialises from `str`.
@@ -49,4 +52,16 @@ git clone https://github.com/edwardanderson/namespacecraft.git
 cd namespacecraft
 uv venv
 uv pip install --editable namespacecraft
+```
+
+## Gotchas
+
+The `+` operator returns a terminal URI object. Any further `+` operations on that object are string concatenations, not additional fragments.
+
+```pycon
+>>> from namespacecraft import Namespace
+>>> Namespace('http://example.org/') / 'a' + 'b'
+'http://example.org/a#b'
+>>> Namespace('http://example.org/') / 'a' + 'b' + 'c'
+'http://example.org/a#bc'
 ```

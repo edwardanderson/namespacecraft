@@ -52,25 +52,35 @@ def test_single_fragment_from_path():
 # Expected errors
 
 def test_only_one_fragment_allowed():
-    EX = Namespace("http://example.org/")
-    PART = EX / "part"
-
+    EX = Namespace('http://example.org/')
+    PART = EX / 'part'
+    
     # First fragment is fine
-    first = PART + "a"
-    assert first == "http://example.org/part#a"
+    first = PART + 'a'
+    assert first == 'http://example.org/part#a'
     
     # The original Namespace can still be used to create another fragment
-    second = PART + "b"
-    assert second == "http://example.org/part#b"
-
+    second = PART + 'b'
+    assert second == 'http://example.org/part#b'
 
 def test_mismatched_delimiters_in_path():
     # Slash namespace cannot accept #
-    EX_slash = Namespace("http://example.org/")
+    EX_slash = Namespace('http://example.org/')
     with pytest.raises(ValueError):
-        EX_slash / "#a"
+        EX_slash / '#a'
 
     # Hash namespace cannot accept /
-    EX_hash = Namespace("http://example.org#")
+    EX_hash = Namespace('http://example.org#')
     with pytest.raises(ValueError):
-        EX_hash / "/a"
+        EX_hash / '/a'
+
+def test_hash_namespace_terminal_behavior():
+    EX = Namespace('http://example.org#')
+
+    # First / returns a terminal object
+    term = EX / 'a'
+    assert term == 'http://example.org#a'
+
+    # Further / calls are invalid (TypeError)
+    with pytest.raises(TypeError):
+        term / 'b'
