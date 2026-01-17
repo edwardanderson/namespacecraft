@@ -22,6 +22,10 @@ def test_multiple_path_extensions_then_fragment():
     PART = EX / 'part'
     assert str(PART / 1 / 2 / 3 + 'a') == 'http://example.org/part/1/2/3#a'
 
+def test_leading_delimiter_in_path():
+    EX = Namespace('http://example.org/') / '/a'
+    assert str(EX) == 'http://example.org/a'
+
 def test_multiple_path_with_duplicate_path_delimiter():
     EX = Namespace('http://example.org/')
     assert str(EX / '/part') == 'http://example.org/part'
@@ -34,7 +38,28 @@ def test_multiple_path_from_list_and_fragment():
     EX = Namespace('http://example.org/') / [1, 2, 3] + 'a'
     assert str(EX) == 'http://example.org/1/2/3#a'
 
+def test_attribute():
+    EX = Namespace('http://example.org/')
+    assert EX.a == 'http://example.org/a'
+
+def test_single_fragment_from_path():
+    EX = Namespace('http://example.org#') / 'a'
+    assert str(EX) == 'http://example.org#a'
+
+# Expected errors
+
 def test_only_one_fragment_allowed():
     EX = Namespace('http://example.org/')
     with pytest.raises(ValueError):
         _ = (EX / 'a' + 'x') + 'y'
+
+def test_mismatched_delimiters_in_path():
+    # Slash namespace cannot accept #
+    EX_slash = Namespace("http://example.org/")
+    with pytest.raises(ValueError):
+        EX_slash / "#a"
+
+    # Hash namespace cannot accept /
+    EX_hash = Namespace("http://example.org#")
+    with pytest.raises(ValueError):
+        EX_hash / "/a"

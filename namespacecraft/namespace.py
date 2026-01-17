@@ -1,15 +1,34 @@
 from __future__ import annotations
+from typing import Type
 
 
 class Namespace:
-    __slots__ = ('_base', '_fragment')
+    __slots__ = ('_base', '_fragment', '_hash', '_term_class')
 
-    def __init__(self, base, fragment=None) -> None:
-        self._base = str(base)
+    def __init__(self, base: str, fragment: str | None = None, *, term_class: Type = str) -> None:
+        base = str(base)
+
+        # Count hash delimiters
+        if base.count('#') > 1:
+            raise ValueError('A namespace may contain at most one fragment delimiter')
+
+        # Determine hash vs slash namespace
+        self._hash = base.endswith('#')
+
+        # Split existing fragment if present
+        if '#' in base:
+            base, existing_fragment = base.split('#', 1)
+            if fragment is not None:
+                raise ValueError('Fragment specified twice')
+            fragment = existing_fragment or None
+
+        self._base = base
         self._fragment = fragment
+        self._term_class = term_class
 
-    def __truediv__(self, other) -> Namespace:
-        # coerence list into path parts
+    # Path-building operator
+    def __truediv__(self, other: str | int | list | tuple) -> Namespace:
+        # Coerce lists/tuples recursively
         if isinstance(other, (list, tuple)):
             ns = self
             for part in other:
@@ -18,36 +37,55 @@ class Namespace:
 
         other = str(other)
 
-        # strip one side to ensure a single slash
-        if self._base.endswith('/') and other.startswith('/'):
-            new_base = self._base + other[1:]
-        elif not self._base.endswith('/') and not other.startswith('/'):
-            new_base = self._base + '/' + other
-        else:
-            new_base = self._base + other
+        if self._fragment is not None:
+            raise ValueError('Cannot extend a namespace that already has a fragment')
 
-        # path extension clears any fragment
-        return Namespace(new_base)
+        # Mismatched delimiter check
+        if self._hash and '/' in other:
+            raise ValueError('Cannot append hierarchical path to a hash namespace')
+        if not self._hash and '#' in other:
+            raise ValueError('Cannot append fragment-like string to a slash namespace')
 
-    def __add__(self, other) -> Namespace:
+        # Slash namespace logic
+        if self._hash:
+            return Namespace(self._base, other, term_class=self._term_class)
+
+        new_base = self._base.rstrip('/') + '/' + other.lstrip('/')
+        return Namespace(new_base, term_class=self._term_class)
+
+
+    # Fragment assignment
+    def __add__(self, other: str) -> Namespace:
         if self._fragment is not None:
             raise ValueError('A namespace may only contain one fragment')
+        return Namespace(self._base, str(other), term_class=self._term_class)
 
-        fragment = str(other)
-        return Namespace(self._base, fragment)
+    # Dot-access for terminal term
+    def __getattr__(self, name: str):
+        if name.startswith('_'):
+            raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
+        
+        if self._hash:
+            term = f'{self._base}#{name}'
+        else:
+            # Remove trailing slash from base, leading slash from name
+            term = f'{self._base.rstrip('/')}/{name.lstrip('/')}'
+        
+        return self._term_class(term)
 
+    # String representation
     def __str__(self) -> str:
-        if self._fragment is None:
-            return self._base
-        return f'{self._base}#{self._fragment}'
+        if self._fragment is not None:
+            return f'{self._base}#{self._fragment}'
+        if self._hash:
+            return f'{self._base}#'
+        return self._base
 
     def __repr__(self) -> str:
         return f'Namespace({str(self)!r})'
 
-    def __contains__(self, other):
+    # Membership test
+    def __contains__(self, other: str | Namespace) -> bool:
         other_str = str(other)
-        # Ignore fragment in the namespace base
         base_no_fragment = self._base
-        if self._fragment:
-            base_no_fragment = self._base.split('#', 1)[0]
         return other_str.startswith(base_no_fragment)

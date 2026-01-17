@@ -28,6 +28,10 @@ state.json
 
 # Local dev environment.
 .dev/
+uv.lock
 
 # Pytest
 .coverage
+
+# Local
+.dev/
