@@ -10,7 +10,7 @@ Namespacecraft is a tiny toolkit for composing URI namespaces.
 >>> EX.a
 Term('http://example.org/a)
 >>> Namespace('http://example.org').terminates_with('#') / 'a' / 'b' / 'c' + 'x'
-Term('http://example.org/a/b/c#x)
+Term('http://example.org/a/b/c#x')
 ```
 
 ### Paths
@@ -60,6 +60,25 @@ Or with the `+` operator.
 Term('http://example.org/1)
 ```
 
+Terms can also be created from `Namespace` instances that terminate with `#` by accessing the first path part.
+
+```pycon
+>>> EX = Namespace('http://example.org#')
+>>> EX / 'a'
+Term('http://example.org#a')
+```
+
+#### Relative Terms
+
+```pycon
+>>> BASE = Namespace('http://example.org/api/')
+>>> term = BASE / 'users/123' + 'details'
+>>> term.relative_to(BASE)
+'users/123/details'
+```
+
+#### Custom Terms
+
 `Namespace` will create terms in any class that initialises from `str`. For example create terms as instances of [`rdflib.URIRef`](https://rdflib.readthedocs.io/en/stable/rdf_terms/?h=uriref#uriref).
 
 ```python
@@ -98,10 +117,30 @@ The `+` operator returns a terminal URI object. Any further `+` operations on th
 ```pycon
 >>> from namespacecraft import Namespace
 >>> Namespace('http://example.org/') + 'a'
-Namespace('http://example.org/a')
+Term('http://example.org/a')
 >>> Namespace('http://example.org/') + 'a' + 'b'
-'http://example.org/ab'
+Term('http://example.org/ab')
 ```
+
+- The `+` operator returns a terminal object. Any further + operations are just string concatenations:
+
+    ```pycon
+    >>> from namespacecraft import Namespace
+    >>> Namespace('http://example.org/') + 'a'
+    Term('http://example.org/a')
+    >>> Namespace('http://example.org/') + 'a' + 'b'
+    Term('http://example.org/ab')
+    ```
+
+- Hash-terminating namespaces are always terminal.
+
+    ```pycon
+    >>> BASE = Namespace('http://example.org#')
+    >>> BASE / 'section'
+    Term('http://example.org#section')
+    >>> (BASE / 'section') / 'subsection'
+    TypeError: 'Term' object is not callable
+    ```
 
 ## Test
 

@@ -12,6 +12,28 @@ class Term(str):
     def __repr__(self) -> str:
         return f'Term({super().__repr__()})'
 
+    def relative_to(self, namespace: Namespace) -> str:
+        """
+        Return the path or fragment portion of this Term relative to the given Namespace.
+
+        Raises:
+            ValueError: If this Term is not within the provided Namespace.
+        """
+        ns_str = str(namespace)
+        term_str = str(self)
+
+        if namespace._hash:
+            # Hash namespace: must start with base + '#'
+            if not term_str.startswith(ns_str):
+                raise ValueError(f"Term {term_str!r} is not under namespace {ns_str!r}")
+            # Relative path is whatever comes after the '#'
+            return term_str[len(ns_str):]
+        else:
+            # Slash namespace: must start with base
+            if not term_str.startswith(ns_str):
+                raise ValueError(f"Term {term_str!r} is not under namespace {ns_str!r}")
+            return term_str[len(ns_str):].lstrip(namespace._trailing_delim)
+
 
 class Namespace:
     __slots__ = ('_base', '_hash', '_term_class', '_trailing_delim', '_last_has_delim')
