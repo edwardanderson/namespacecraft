@@ -35,16 +35,16 @@ class Namespace:
 
         if self._hash:
             if '/' in other_str:
-                raise ValueError("Cannot append hierarchical path to a hash namespace")
-            return self._term_class(f"{self._base}#{other_str}")
+                raise ValueError('Cannot append hierarchical path to a hash namespace')
+            return self._term_class(f'{self._base}#{other_str}')
 
         if '#' in other_str:
-            raise ValueError("Cannot append fragment-like string to a slash namespace")
+            raise ValueError('Cannot append fragment-like string to a slash namespace')
 
         # NORMALIZED path join — exactly one '/'
         base = self._base.rstrip('/')
         part = other_str.lstrip('/')
-        new_base = f"{base}/{part}"
+        new_base = f'{base}/{part}'
 
         return Namespace(
             new_base,
@@ -58,7 +58,7 @@ class Namespace:
         other_str = str(other)
 
         if self._hash:
-            return self._term_class(f"{self._base}#{other_str}")
+            return self._term_class(f'{self._base}#{other_str}')
 
         base_str = str(self)
 
@@ -105,10 +105,10 @@ class Namespace:
     def terminates_with(self, character: str) -> Namespace:
         """Return a Namespace() guaranteed to end with the given delimiter"""
         if not character:
-            raise ValueError("character must be a non-empty string")
+            raise ValueError('character must be a non-empty string')
 
         if self._hash:
-            raise ValueError("Cannot set a trailing delimiter on a hash namespace")
+            raise ValueError('Cannot set a trailing delimiter on a hash namespace')
 
         if self._base.endswith(character):
             return self
