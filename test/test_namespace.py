@@ -148,6 +148,16 @@ def test_terminates_with_adds_delimiter():
     assert str(EX) == 'http://example.org'
 
 
+def test_terminates_with_slash_path():
+    EX = Namespace('http://example.org/').terminates_with('/') / 'a' / 'b' + 'c'
+    assert str(EX) == 'http://example.org/a/b/c'
+
+
+def test_terminates_with_hash_path():
+    EX = Namespace('http://example.org/').terminates_with('#') / 'a' / 'b' + 'c'
+    assert str(EX) == 'http://example.org/a/b#c'
+
+
 def test_terminates_with_no_double_delimiter():
     EX = Namespace('http://example.org/')
     EX2 = EX.terminates_with('/')

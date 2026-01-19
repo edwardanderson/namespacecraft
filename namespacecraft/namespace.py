@@ -62,7 +62,12 @@ class Namespace:
 
         base_str = str(self)
 
-        # If namespace was configured to terminate with a delimiter,
+        # If namespace was configured to terminate with #, strip trailing / and use #
+        if self._trailing_delim == '#':
+            base_str = base_str.rstrip('/')
+            return self._term_class(base_str + '#' + other_str)
+
+        # If namespace was configured to terminate with another delimiter,
         # insert it exactly once at the termination boundary.
         if self._trailing_delim:
             if not base_str.endswith(self._trailing_delim) and not other_str.startswith(self._trailing_delim):
@@ -110,11 +115,18 @@ class Namespace:
         if self._hash:
             raise ValueError('Cannot set a trailing delimiter on a hash namespace')
 
-        if self._base.endswith(character):
-            return self
+        if character == '#':
+            # When terminating with #, ensure base ends with / but don't add # to base
+            new_base = self._base.rstrip('/') + '/'
+        else:
+            # For other delimiters, ensure base ends with the character
+            if self._base.endswith(character):
+                new_base = self._base
+            else:
+                new_base = self._base + character
 
         return Namespace(
-            self._base + character,
+            new_base,
             term_cls=self._term_class,
             _trailing_delim=character
         )
