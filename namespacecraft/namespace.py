@@ -75,7 +75,6 @@ class Namespace:
         else:
             return self._term_class(base_str + other_str)
 
-    # Dot-access creates a terminal
     def __getattr__(self, name: str):
         """Create a Term() by accessing an attribute"""
         if name.startswith('_'):
