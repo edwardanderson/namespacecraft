@@ -3,14 +3,14 @@ from typing import Type
 
 
 class Term(str):
-    """A terminal URI value."""
+    """A terminal URI value"""
     __slots__ = ()
 
     def __new__(cls, value: str):
         return super().__new__(cls, value)
 
     def __repr__(self) -> str:
-        return f"Term({super().__repr__()})"
+        return f'Term({super().__repr__()})'
 
 
 class Namespace:
@@ -20,7 +20,7 @@ class Namespace:
         base = str(base)
 
         if base.count('#') > 1:
-            raise ValueError("A namespace may contain at most one fragment delimiter")
+            raise ValueError('A namespace may contain at most one fragment delimiter')
 
         self._hash = base.endswith('#')
 
@@ -33,8 +33,8 @@ class Namespace:
         self._trailing_delim = _trailing_delim
         self._last_has_delim = _last_has_delim
 
-    # Path-building operator
-    def __truediv__(self, other: str | int | list | tuple) -> "Namespace":
+    def __truediv__(self, other: str | int | list | tuple) -> Namespace:
+        """Build a Namespace() like a path"""
         if isinstance(other, (list, tuple)):
             ns = self
             for part in other:
@@ -45,21 +45,21 @@ class Namespace:
 
         if self._hash:
             if '/' in other_str:
-                raise ValueError("Cannot append hierarchical path to a hash namespace")
-            return self._term_class(f"{self._base}#{other_str}")
+                raise ValueError('Cannot append hierarchical path to a hash namespace')
+            return self._term_class(f'{self._base}#{other_str}')
 
         if '#' in other_str:
-            raise ValueError("Cannot append fragment-like string to a slash namespace")
+            raise ValueError('Cannot append fragment-like string to a slash namespace')
 
         # Compose new base respecting _trailing_delim
         new_base = self._base.rstrip(self._trailing_delim) + self._trailing_delim + other_str.lstrip(self._trailing_delim)
         return Namespace(new_base, term_cls=self._term_class, _trailing_delim=self._trailing_delim, _last_has_delim=self._trailing_delim in other_str)
 
-    # Addition creates a terminal
     def __add__(self, other: str):
+        """Create a Term() by adding a value"""
         other_str = str(other)
         if self._hash:
-            return self._term_class(f"{self._base}#{other_str}")
+            return self._term_class(f'{self._base}#{other_str}')
         # Slash namespace
         base_str = str(self)
         # If last component had delimiter, just concatenate
@@ -77,26 +77,28 @@ class Namespace:
 
     # Dot-access creates a terminal
     def __getattr__(self, name: str):
+        """Create a Term() by accessing an attribute"""
         if name.startswith('_'):
-            raise AttributeError(f"{type(self).__name__} object has no attribute {name!r}")
+            raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
 
         if self._hash:
-            term_str = f"{self._base}#{name}"
+            term_str = f'{self._base}#{name}'
         else:
-            term_str = f"{self._base.rstrip('/')}/{name}"
+            term_str = f'{self._base.rstrip('/')}/{name}'
 
         return self._term_class(term_str)
 
-    def __getitem__(self, key: str) -> Term:
+    def __getitem__(self, key: str):
+        """Create a Term() by accessing an attribute by name"""
         return self.__getattr__(str(key))
 
     def __str__(self) -> str:
         return self._base + ('#' if self._hash else '')
 
     def __repr__(self) -> str:
-        return f"Namespace({str(self)!r})"
+        return f'Namespace({str(self)!r})'
 
-    def __contains__(self, other: str | "Namespace") -> bool:
+    def __contains__(self, other: str | Namespace) -> bool:
         return str(other).startswith(self._base)
 
     @property
@@ -107,7 +109,7 @@ class Namespace:
     def terminates_with(self, character: str) -> Namespace:
         """Return a new Namespace guaranteed to end with the given delimiter."""
         if not character:
-            raise ValueError("character must be a non-empty string")
+            raise ValueError('character must be a non-empty string')
 
         if self._hash:
             return self  # hash namespaces ignore trailing delimiters
