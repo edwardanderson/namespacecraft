@@ -26,6 +26,12 @@ def test_create_term_by_addition_with_leading_delimiter():
     assert str(term) == 'http://example.org/a'
 
 
+def test_create_term_without_delimiter():
+    EX = Namespace('http://example.org')
+    term = EX + 'a'
+    assert str(term) == 'http://example.orga'
+
+
 def test_create_term_by_getting_item():
     EX = Namespace('http://example.org/')
     
