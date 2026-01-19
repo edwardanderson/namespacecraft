@@ -5,12 +5,12 @@ Namespacecraft is a tiny toolkit for composing URI namespaces.
 ## Use
 
 ```pycon
->>> from namespacecraft import Namespace, Term
+>>> from namespacecraft import Namespace
 >>> EX = Namespace('http://example.org/')
 >>> EX.a
-Term('http://example.org/a)
+Term('http://example.org/a')
 >>> Namespace('http://example.org').terminates_with('#') / 'a' / 'b' / 'c' + 'x'
-Term('http://example.org/a/b/c#x)
+Term('http://example.org/a/b/c#x')
 ```
 
 ### Paths
@@ -19,14 +19,14 @@ Build paths using the `/` operator.
 
 ```pycon
 >>> Namespace('http://example.org/') / 'a' / 'b' / 'c'
-Namespace('http://example.org/a/b/c)
+Namespace('http://example.org/a/b/c')
 ```
 
-Lists are coerced to string paths.
+You can pass a list or tuple to `/` to append multiple path components at once.
 
 ```pycon
 >>> Namespace('http://example.org') / [1, 2, 3]
-Namespace('http://example.org/1/2/3)
+Namespace('http://example.org/1/2/3')
 ```
 
 Use `terminates_with()` to set the final delimiter.
@@ -50,14 +50,14 @@ Or by getting an attribute by name.
 
 ```pycon
 >>> EX['b']
-Term('http://example.org/b)
+Term('http://example.org/b')
 ```
 
 Or with the `+` operator.
 
 ```pycon
 >>> EX + 1
-Term('http://example.org/1)
+Term('http://example.org/1')
 ```
 
 `Namespace` will create terms in any class that initialises from `str`. For example create terms as instances of [`rdflib.URIRef`](https://rdflib.readthedocs.io/en/stable/rdf_terms/?h=uriref#uriref).
@@ -82,23 +82,40 @@ ns1:s ns1:p ns1:o .
 ## Install
 
 ```bash
-uv add namespacecraft
+pip install namespacecraft
 ```
 
 ## Gotchas
 
-The `+` operator returns a terminal URI object. Any further `+` operations on that object are string concatenations, not additional fragments.
+- The `+` operator returns a `Term` object. Any further `+` operations are just string concatenations:
 
-```pycon
->>> from namespacecraft import Namespace
->>> Namespace('http://example.org/') + 'a'
-Namespace('http://example.org/a')
->>> Namespace('http://example.org/') + 'a' + 'b'
-'http://example.org/ab'
-```
+    ```pycon
+    >>> Namespace('http://example.org/') + 'a'
+    Term('http://example.org/a')
+    >>> Namespace('http://example.org/') + 'a' + 'b'
+    Term('http://example.org/ab')
+    ```
+
+- Namespaces ending with `#` are always terminal. Any path added via `/` immediately returns a `Term`, and further `/` operations are not allowed.
+
+    ```pycon
+    >>> BASE = Namespace('http://example.org#')
+    >>> BASE / 'section'
+    Term('http://example.org#section')
+    >>> (BASE / 'section') / 'subsection'
+    TypeError: unsupported operand type(s) for /: 'Term' and 'str'
+    ```
+
+- You cannot set a trailing delimiter on a hash namespace. Attempting to do so will raise a `ValueError`:
+  
+    ```pycon
+    >>> BASE = Namespace('http://example.org#')
+    >>> BASE.terminates_with('/')
+    ValueError: Cannot set a trailing delimiter on a hash namespace
+    ```
 
 ## Test
 
 ```bash
-uv run pytest
+pytest
 ```

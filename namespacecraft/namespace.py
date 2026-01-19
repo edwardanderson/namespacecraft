@@ -99,23 +99,22 @@ class Namespace:
 
     @property
     def uri(self):
-        """Return this namespace as a terminal URI (_term_class instance)."""
+        """Return this namespace as a terminal URI (_term_class instance)"""
         return self._term_class(str(self))
 
     def terminates_with(self, character: str) -> Namespace:
+        """Return a Namespace() guaranteed to end with the given delimiter"""
         if not character:
             raise ValueError("character must be a non-empty string")
 
         if self._hash:
+            raise ValueError("Cannot set a trailing delimiter on a hash namespace")
+
+        if self._base.endswith(character):
             return self
 
-        base = self._base
-        if not base.endswith(character):
-            base = base + character
-
         return Namespace(
-            base,
+            self._base + character,
             term_cls=self._term_class,
-            _trailing_delim=character,
-            _last_has_delim=True
+            _trailing_delim=character
         )
