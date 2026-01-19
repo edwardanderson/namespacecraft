@@ -1,1 +1,2 @@
-from namespacecraft.namespace import Namespace, Term
+from namespacecraft.namespace import Namespace
+from namespacecraft.term import Term
