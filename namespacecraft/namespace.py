@@ -1,22 +1,13 @@
 from __future__ import annotations
 from typing import Type
 
-
-class Term(str):
-    """A terminal URI value"""
-    __slots__ = ()
-
-    def __new__(cls, value: str):
-        return super().__new__(cls, value)
-
-    def __repr__(self) -> str:
-        return f'Term({super().__repr__()})'
+from namespacecraft.term import Term
 
 
 class Namespace:
     __slots__ = ('_base', '_hash', '_term_class', '_trailing_delim', '_last_has_delim')
 
-    def __init__(self, base: str, *, term_cls: Type = Term, _trailing_delim: str = '/', _last_has_delim: bool = False) -> None:
+    def __init__(self, base: str, *, term_cls: Type = Term, _trailing_delim: str | None = None, _last_has_delim: bool = False) -> None:
         base = str(base)
 
         if base.count('#') > 1:
@@ -34,7 +25,6 @@ class Namespace:
         self._last_has_delim = _last_has_delim
 
     def __truediv__(self, other: str | int | list | tuple) -> Namespace:
-        """Build a Namespace() like a path"""
         if isinstance(other, (list, tuple)):
             ns = self
             for part in other:
@@ -51,29 +41,36 @@ class Namespace:
         if '#' in other_str:
             raise ValueError('Cannot append fragment-like string to a slash namespace')
 
-        # Compose new base respecting _trailing_delim
-        new_base = self._base.rstrip(self._trailing_delim) + self._trailing_delim + other_str.lstrip(self._trailing_delim)
-        return Namespace(new_base, term_cls=self._term_class, _trailing_delim=self._trailing_delim, _last_has_delim=self._trailing_delim in other_str)
+        # Normalised path join — exactly one '/'
+        base = self._base.rstrip('/')
+        part = other_str.lstrip('/')
+        new_base = f'{base}/{part}'
+
+        return Namespace(
+            new_base,
+            term_cls=self._term_class,
+            _trailing_delim=self._trailing_delim,
+            _last_has_delim=other_str.endswith('/')
+        )
 
     def __add__(self, other: str):
-        """Create a Term() by adding a value"""
+        """Create a Term by literal concatenation, respecting configured termination."""
         other_str = str(other)
+
         if self._hash:
             return self._term_class(f'{self._base}#{other_str}')
-        # Slash namespace
+
         base_str = str(self)
-        # If last component had delimiter, just concatenate
-        if self._last_has_delim:
-            return self._term_class(base_str + other_str)
-        # If base doesn't end with delimiter and other doesn't start with it, add delimiter
-        if not base_str.endswith(self._trailing_delim) and not other_str.startswith(self._trailing_delim):
-            return self._term_class(base_str + self._trailing_delim + other_str)
-        # If both have delimiter, strip from other
-        elif base_str.endswith(self._trailing_delim) and other_str.startswith(self._trailing_delim):
-            return self._term_class(base_str + other_str.lstrip(self._trailing_delim))
-        # Otherwise just concatenate
-        else:
-            return self._term_class(base_str + other_str)
+
+        # If namespace was configured to terminate with a delimiter,
+        # insert it exactly once at the termination boundary.
+        if self._trailing_delim:
+            if not base_str.endswith(self._trailing_delim) and not other_str.startswith(self._trailing_delim):
+                return self._term_class(base_str + self._trailing_delim + other_str)
+            if base_str.endswith(self._trailing_delim) and other_str.startswith(self._trailing_delim):
+                return self._term_class(base_str + other_str.lstrip(self._trailing_delim))
+
+        return self._term_class(base_str + other_str)
 
     def __getattr__(self, name: str):
         """Create a Term() by accessing an attribute"""
@@ -102,18 +99,22 @@ class Namespace:
 
     @property
     def uri(self):
-        """Return this namespace as a terminal URI (_term_class instance)."""
+        """Return this namespace as a terminal URI (_term_class instance)"""
         return self._term_class(str(self))
 
     def terminates_with(self, character: str) -> Namespace:
-        """Return a new Namespace guaranteed to end with the given delimiter."""
+        """Return a Namespace() guaranteed to end with the given delimiter"""
         if not character:
             raise ValueError('character must be a non-empty string')
 
         if self._hash:
-            return self  # hash namespaces ignore trailing delimiters
+            raise ValueError('Cannot set a trailing delimiter on a hash namespace')
 
         if self._base.endswith(character):
             return self
 
-        return Namespace(self._base + character, term_cls=self._term_class, _trailing_delim=character, _last_has_delim=self._last_has_delim)
+        return Namespace(
+            self._base + character,
+            term_cls=self._term_class,
+            _trailing_delim=character
+        )

@@ -26,6 +26,12 @@ def test_create_term_by_addition_with_leading_delimiter():
     assert str(term) == 'http://example.org/a'
 
 
+def test_create_term_without_delimiter():
+    EX = Namespace('http://example.org')
+    term = EX + 'a'
+    assert str(term) == 'http://example.orga'
+
+
 def test_create_term_by_getting_item():
     EX = Namespace('http://example.org/')
     
@@ -134,52 +140,51 @@ def test_uri_property_returns_term():
 
 
 def test_terminates_with_adds_delimiter():
-    EX = Namespace("http://example.org")
-    EX2 = EX.terminates_with("/")
-    assert str(EX2) == "http://example.org/"
+    EX = Namespace('http://example.org')
+    EX2 = EX.terminates_with('/')
+    assert str(EX2) == 'http://example.org/'
     assert isinstance(EX2, Namespace)
     # Original namespace is unchanged
-    assert str(EX) == "http://example.org"
+    assert str(EX) == 'http://example.org'
 
 
 def test_terminates_with_no_double_delimiter():
-    EX = Namespace("http://example.org/")
-    EX2 = EX.terminates_with("/")
-    assert str(EX2) == "http://example.org/"
+    EX = Namespace('http://example.org/')
+    EX2 = EX.terminates_with('/')
+    assert str(EX2) == 'http://example.org/'
     # Should return self if already ends with delimiter
     assert EX2 is EX or str(EX2) == str(EX)
 
 
-def test_terminates_with_hash_namespace_ignored():
-    EX = Namespace("http://example.org#")
-    EX2 = EX.terminates_with("/")
-    # Hash namespace ignores terminating slash
-    assert str(EX2) == "http://example.org#"
+def test_terminates_with_hash_namespace_raises():
+    BASE = Namespace('http://example.org#')
+    with pytest.raises(ValueError, match='Cannot set a trailing delimiter on a hash namespace'):
+        BASE.terminates_with('/')
 
 
 def test_terminates_with_invalid_character():
-    EX = Namespace("http://example.org")
+    EX = Namespace('http://example.org')
     with pytest.raises(ValueError):
-        EX.terminates_with("")
+        EX.terminates_with('')
 
 
 def test_terminates_with_allows_concatenation():
-    EX = Namespace("http://example.org").terminates_with("/")
-    term = EX / "a" / "b" + "c"
-    assert str(term) == "http://example.org/a/b/c"
+    EX = Namespace('http://example.org').terminates_with('/')
+    term = EX / 'a' / 'b' + 'c'
+    assert str(term) == 'http://example.org/a/b/c'
 
 
 def test_terminates_with_does_not_affect_getattr():
-    EX = Namespace("http://example.org").terminates_with("/")
+    EX = Namespace('http://example.org').terminates_with('/')
     t = EX.a
     assert isinstance(t, Term)
-    assert str(t) == "http://example.org/a"
+    assert str(t) == 'http://example.org/a'
 
 
 def test_terminates_with_returns_new_instance():
-    EX = Namespace("http://example.org")
-    EX2 = EX.terminates_with("/")
-    EX3 = EX.terminates_with("/")
+    EX = Namespace('http://example.org')
+    EX2 = EX.terminates_with('/')
+    EX3 = EX.terminates_with('/')
     # New instances may be returned even if logically equal
     assert str(EX2) == str(EX3)
     assert isinstance(EX2, Namespace)
