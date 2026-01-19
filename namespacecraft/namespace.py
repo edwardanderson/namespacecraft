@@ -41,7 +41,7 @@ class Namespace:
         if '#' in other_str:
             raise ValueError('Cannot append fragment-like string to a slash namespace')
 
-        # NORMALIZED path join — exactly one '/'
+        # Normalised path join — exactly one '/'
         base = self._base.rstrip('/')
         part = other_str.lstrip('/')
         new_base = f'{base}/{part}'
