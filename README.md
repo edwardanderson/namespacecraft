@@ -87,7 +87,7 @@ pip install namespacecraft
 
 ## Gotchas
 
-- The `+` operator returns a `Term` object. Any further `+` operations are just string concatenations:
+- The `+` operator returns a `Term` object. Any further `+` operations are just string concatenations.
 
     ```pycon
     >>> Namespace('http://example.org/') + 'a'
@@ -106,7 +106,7 @@ pip install namespacecraft
     TypeError: unsupported operand type(s) for /: 'Term' and 'str'
     ```
 
-- You cannot set a trailing delimiter on a hash namespace. Attempting to do so will raise a `ValueError`:
+- You cannot set a trailing delimiter on a hash namespace. Attempting to do so will raise a `ValueError`.
   
     ```pycon
     >>> BASE = Namespace('http://example.org#')
