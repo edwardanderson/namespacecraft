@@ -20,6 +20,28 @@ def test_create_term_by_addition():
     assert EX / 'x/y' + 'z' == 'http://example.org/x/yz'
 
 
+def test_create_term_by_addition_with_leading_delimiter():
+    EX = Namespace('http://example.org')
+    term = EX + '/a'
+    assert str(term) == 'http://example.org/a'
+
+
+def test_create_term_by_getting_item():
+    EX = Namespace('http://example.org/')
+    
+    t = EX['abc']
+    assert isinstance(t, Term)
+    assert str(t) == 'http://example.org/abc'
+    
+    # Should also work with paths
+    t2 = EX['x/y/z']
+    assert isinstance(t2, Term)
+    assert str(t2) == 'http://example.org/x/y/z'
+    
+    # Dot notation and indexing should produce the same result for simple names
+    assert str(EX.a) == str(EX['a'])
+
+
 def test_deduplicates_delimiter_in_path():
     EX = Namespace('http://example.org/') / '/a'
     assert str(EX) == 'http://example.org/a'

@@ -3,12 +3,7 @@ from typing import Type
 
 
 class Term(str):
-    """
-    A terminal URI value.
-
-    Subclasses `str` for seamless interoperability with libraries that
-    expect string-like URI objects.
-    """
+    """A terminal URI value."""
     __slots__ = ()
 
     def __new__(cls, value: str):
@@ -19,9 +14,9 @@ class Term(str):
 
 
 class Namespace:
-    __slots__ = ('_base', '_hash', '_term_class', '_trailing_delim', '_last_component_has_delimiter')
+    __slots__ = ('_base', '_hash', '_term_class', '_trailing_delim', '_last_has_delim')
 
-    def __init__(self, base: str, *, term_class: Type = Term, trailing_delim: str = '/', last_component_has_delimiter: bool = False) -> None:
+    def __init__(self, base: str, *, term_cls: Type = Term, _trailing_delim: str = '/', _last_has_delim: bool = False) -> None:
         base = str(base)
 
         if base.count('#') > 1:
@@ -29,14 +24,14 @@ class Namespace:
 
         self._hash = base.endswith('#')
 
-        # Remove any embedded fragment; we keep only the base
+        # Remove embedded fragment; only keep base
         if '#' in base:
             base, _ = base.split('#', 1)
 
         self._base = base
-        self._term_class = term_class
-        self._trailing_delim = trailing_delim
-        self._last_component_has_delimiter = last_component_has_delimiter
+        self._term_class = term_cls
+        self._trailing_delim = _trailing_delim
+        self._last_has_delim = _last_has_delim
 
     # Path-building operator
     def __truediv__(self, other: str | int | list | tuple) -> "Namespace":
@@ -56,34 +51,29 @@ class Namespace:
         if '#' in other_str:
             raise ValueError("Cannot append fragment-like string to a slash namespace")
 
+        # Compose new base respecting _trailing_delim
         new_base = self._base.rstrip(self._trailing_delim) + self._trailing_delim + other_str.lstrip(self._trailing_delim)
-        return Namespace(new_base, term_class=self._term_class, trailing_delim=self._trailing_delim, last_component_has_delimiter=self._trailing_delim in other_str)
+        return Namespace(new_base, term_cls=self._term_class, _trailing_delim=self._trailing_delim, _last_has_delim=self._trailing_delim in other_str)
 
     # Addition creates a terminal
     def __add__(self, other: str):
         other_str = str(other)
-        base_str = str(self)
-
         if self._hash:
             return self._term_class(f"{self._base}#{other_str}")
+        # Slash namespace
+        base_str = str(self)
+        # If last component had delimiter, just concatenate
+        if self._last_has_delim:
+            return self._term_class(base_str + other_str)
+        # If base doesn't end with delimiter and other doesn't start with it, add delimiter
+        if not base_str.endswith(self._trailing_delim) and not other_str.startswith(self._trailing_delim):
+            return self._term_class(base_str + self._trailing_delim + other_str)
+        # If both have delimiter, strip from other
+        elif base_str.endswith(self._trailing_delim) and other_str.startswith(self._trailing_delim):
+            return self._term_class(base_str + other_str.lstrip(self._trailing_delim))
+        # Otherwise just concatenate
         else:
-            # For slash namespace
-            # Strip leading delimiter from other if base already ends with it
-            if base_str.endswith(self._trailing_delim) and other_str.startswith(self._trailing_delim):
-                other_str = other_str.lstrip(self._trailing_delim)
-                return self._term_class(base_str + other_str)
-            elif base_str.endswith(self._trailing_delim):
-                # Base already ends with delimiter, just concatenate
-                return self._term_class(base_str + other_str)
-            elif self._last_component_has_delimiter:
-                # Last component added via / contained delimiter, so just concatenate
-                return self._term_class(base_str + other_str)
-            else:
-                # Last component was simple, add delimiter before new component (unless other starts with it)
-                if other_str.startswith(self._trailing_delim):
-                    return self._term_class(base_str + other_str)
-                else:
-                    return self._term_class(base_str + self._trailing_delim + other_str)
+            return self._term_class(base_str + other_str)
 
     # Dot-access creates a terminal
     def __getattr__(self, name: str):
@@ -97,14 +87,15 @@ class Namespace:
 
         return self._term_class(term_str)
 
-    # String representation
+    def __getitem__(self, key: str) -> Term:
+        return self.__getattr__(str(key))
+
     def __str__(self) -> str:
         return self._base + ('#' if self._hash else '')
 
     def __repr__(self) -> str:
         return f"Namespace({str(self)!r})"
 
-    # Membership test
     def __contains__(self, other: str | "Namespace") -> bool:
         return str(other).startswith(self._base)
 
@@ -124,4 +115,4 @@ class Namespace:
         if self._base.endswith(character):
             return self
 
-        return Namespace(self._base + character, term_class=self._term_class, trailing_delim=character, last_component_has_delimiter=self._last_component_has_delimiter)
+        return Namespace(self._base + character, term_cls=self._term_class, _trailing_delim=character, _last_has_delim=self._last_has_delim)
