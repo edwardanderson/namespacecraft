@@ -67,7 +67,7 @@ from namespacecraft import Namespace
 from rdflib import Graph, URIRef
 
 
-EX = Namespace('http://example.org', term_cls=URIRef).terminates_with('/') / 'a/b/c'
+EX = Namespace('http://example.org/', term_cls=URIRef).terminates_with('/') / 'a/b/c'
 graph = Graph()
 graph.add((EX.s, EX.p, EX.o))
 print(graph.serialize(format='turtle'))
@@ -81,14 +81,8 @@ ns1:s ns1:p ns1:o .
 
 ## Install
 
-> [!NOTE]
-> Until this package has a 1.x.x release, install it in editable state in a virtual environment.
-
 ```bash
-git clone https://github.com/edwardanderson/namespacecraft.git
-cd namespacecraft
-uv venv
-uv pip install --editable namespacecraft
+uv add namespacecraft
 ```
 
 ## Gotchas
